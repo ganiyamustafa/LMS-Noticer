@@ -2,6 +2,8 @@ import json
 import smtplib, ssl
 import mechanicalsoup
 import numpy as np
+import schedule
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from threading import Thread
@@ -211,6 +213,7 @@ class lms():
             message.attach(part2)
             # ', , rifkierlangga17@gmail.com, dafanurulfauziansyah97@gmail.com, , , , ariabagaswara23@gmail.com'
             for r in receiver: server.sendmail(sender_email, r, message.as_string())
+            # server.sendmail(sender_email, 'ganiyamustaga32@gmail.com', message.as_string())
         except Exception as e:
             # Print any error messages to stdout
             print(e)
@@ -225,15 +228,27 @@ class lms():
 
     def check_pkn_updated(self):
         self.send_email('PKN Course Update', 'PPKn XII (Tintin Sutrisni)')
+    
+    def check_pkk_updated(self):
+        self.send_email('PKK Shopee Course Update', 'Produk Kreatif Kewirausahaan XII (Sopiah)')
 
     def check_jepang_updated(self):
         self.send_email('Jepang Course Update', 'Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.)')
+    
+    def check_pabp_updated(self):
+        self.send_email('PABP Course Update', 'PABP XII (LUKMAN)')
 
     def get_PKN_assignment(self, assign_detail: bool=False):
         self.login('181113847', 'PRSYETI1')
         self.save_data('PPKn XII (Tintin Sutrisni).json', self.get_assignment(self.load_data('XII-RPL-A course.json'), 'PPKn XII (Tintin Sutrisni)'))
         if assign_detail: self.save_data('PPKn XII (Tintin Sutrisni).json', self.get_assign_detail(data=self.load_data('PPKn XII (Tintin Sutrisni).json')))
         return self.load_data('PPKn XII (Tintin Sutrisni).json')
+
+    def get_PKK_assignment(self, assign_detail: bool=False):
+        self.login('181113847', 'PRSYETI1')
+        self.save_data('Produk Kreatif Kewirausahaan XII (Sopiah).json', self.get_assignment(self.load_data('XII-RPL-A course.json'), 'Produk Kreatif Kewirausahaan XII (Sopiah)'))
+        if assign_detail: self.save_data('Produk Kreatif Kewirausahaan XII (Sopiah).json', self.get_assign_detail(data=self.load_data('Produk Kreatif Kewirausahaan XII (Sopiah).json')))
+        return self.load_data('Produk Kreatif Kewirausahaan XII (Sopiah).json')
 
     def get_Indonesia_assignment(self, assign_detail: bool=False):
         self.login('181113847', 'PRSYETI1')
@@ -252,6 +267,12 @@ class lms():
         self.save_data('Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.).json', self.get_assignment(self.load_data('XII-RPL-A course.json'), 'Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.)'))
         if assign_detail: self.save_data('Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.).json', self.get_assign_detail(data=self.load_data('Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.).json')))
         return self.load_data('Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.).json')
+    
+    def get_pabp_assignment(self, assign_detail: bool=False):
+        self.login('181113847', 'PRSYETI1')
+        self.save_data('PABP XII (LUKMAN).json', self.get_assignment(self.load_data('XII-RPL-A course.json'), 'PABP XII (LUKMAN)'))
+        if assign_detail: self.save_data('PABP XII (LUKMAN).json', self.get_assign_detail(data=self.load_data('PABP XII (LUKMAN).json')))
+        return self.load_data('PABP XII (LUKMAN).json')
 
     def get_course_data(self, course_name: str=''):
         print('loading')
@@ -260,20 +281,36 @@ class lms():
 
 Lms = lms()
 
+# def job():
+#     print('job')
+
 # save_data('lms.json', Lms.get_course_data())
 print('Start...')
 # run first
-# Lms.get_course()
+Lms.get_course()
 
 #run second
-# Lms.get_Indonesia_assignment()
-# Lms.get_Inggris_assignment()
-# Lms.get_Jepang_assignment()
-# Lms.get_PKN_assignment()
+Lms.get_Indonesia_assignment()
+Lms.get_Inggris_assignment()
+Lms.get_Jepang_assignment()
+Lms.get_PKN_assignment()
+Lms.get_pabp_assignment()
+Lms.get_PKK_assignment()
+# schedule.every(3).minutes.do(job)
+schedule.every().tuesday.at("08:00").do(Lms.check_indonesia_updated)
+schedule.every().tuesday.at("08:30").do(Lms.check_pkn_updated)
+schedule.every().tuesday.at("09:30").do(Lms.check_pkk_updated)
+schedule.every().wednesday.at("11:00").do(Lms.check_inggris_updated)
+schedule.every().friday.at("08:00").do(Lms.check_jepang_updated)
+schedule.every().friday.at("08:30").do(Lms.check_pabp_updated)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
 
 # cek update
 # Lms.check_jepang_updated()
-Lms.check_inggris_updated()
+# Lms.check_inggris_updated()
 # Lms.check_indonesia_updated()
 # Lms.check_pkn_updated()
 # print(np.setdiff1d(n2, n))
