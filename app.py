@@ -10,25 +10,27 @@ from json_handler import load_data
 from apscheduler.schedulers.blocking import BlockingScheduler
 import time
 
-def generate_email_body(lms:LMS, email_sender:str, email_receiver:str, course_name):
+def generate_email_body(lms:LMS, email_sender:str, email_receiver:list, course_name, body):
     try:
         body_message = html_body = ''
+        receivers = ', '.join(receiver for receiver in email_receiver)
         message = MIMEMultipart("alternative")
         message["Subject"] = f'{course_name} Baru Saja Memposting Tugas Baru'
         message["From"] = email_sender
-        message["To"] = email_receiver
+        message["To"] = receivers
 
-        body = lms.course_updated(course_name)
+        body = body
         data = load_data(f'Course Data/XII RPL A/{course_name}.json')
-        for body_ in body.split("\n"):
-            body__ = body_.replace('[', '').replace(']', '').replace(" '", '').replace("'", '')
-            body_message += f'\n{body__}'
+
+        for link in body:
+            body_message += f'\n{link}'
             try:
-                title = [d['Title'] for d_ in data[0]['Activity'] for d in d_['Activity List'] if d['Link'] and body__ in d['Link']]
+                title = [d['Title'] for d_ in data[0]['Activity'] for d in d_['Activity List'] if d['Link'] and link in d['Link']]
+
             except Exception as e:
                 title = '#'
 
-            html_body += f'<li><a href="{body__}">{title}</a></li>'
+            html_body += f'<li><a href="{link}">{title}</a></li>'
         html = f"""
             <html>
             <body>
@@ -44,12 +46,14 @@ def generate_email_body(lms:LMS, email_sender:str, email_receiver:str, course_na
         message.attach(part2)
         return message
     except Exception as e:
+        print(e)
         return None
 
 def check_if_update(lms:LMS, email:Email, ml:MailingList, course:str, day:str):
-    if lms.course_updated(course):
+    info_update = lms.course_updated(course)
+    if any(info_update):
+        message = generate_email_body(lms, email.get_user(), ml.get_list(), course, info_update)
         for receiver in ml.get_list():
-            message = generate_email_body(lms, email.get_user(), receiver, course)
             email.server.sendmail(email.get_user(), receiver, message.as_string())
     else:
         print(f'{day} pukul {datetime.datetime.now().hour} {course} belum ada update')
@@ -70,7 +74,7 @@ if __name__ == "__main__":
             print('Email login failed, retrying...\n')
 
     if not os.path.isfile('Course Data/XII RPL A/Course List.json'):
-        lms.get_course()
+        lms.get_courses()
 
     sched = BlockingScheduler()
     sched.add_job(lambda:check_if_update(lms, email, ml, 'PPKn XII (Tintin Sutrisni)', 'Selasa'), 'cron', day_of_week='tue', hour='0-15')

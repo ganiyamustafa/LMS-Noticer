@@ -2,6 +2,7 @@ import mechanicalsoup
 from json_handler import save_data, load_data
 from threading import Thread
 import numpy as np
+import os
 
 class LMS():
     base_url = "https://lms.smkn1-cmi.sch.id/"
@@ -95,8 +96,14 @@ class LMS():
 
     def course_updated(self, course:str):
         self.login()
+
+        if not os.path.isfile(f'Course Data/XII RPL A/{course}.json'):
+            print(f'Creating Course Data/XII RPL A/{course}.json...')
+            self.get_course_detail(course)
+
         old_data = load_data(f'Course Data/XII RPL A/{course}.json')
-        data = self.get_course_detail(course)
+        data = self.get_assignment(load_data(self.course_list), course)
+        data_copied = data.copy()
 
         title = [d['Title'] for d_ in data[0]['Activity'] for d in d_['Activity List'] if d['Link']]
         data = [d['Link'] for d_ in data[0]['Activity'] for d in d_['Activity List'] if d['Link']]
@@ -104,16 +111,18 @@ class LMS():
         old_title = [d['Title'] for od in old_data[0]['Activity'] for d in od['Activity List'] if d['Link']]
         old_data = [d['Link'] for od in old_data[0]['Activity'] for d in od['Activity List'] if d['Link']]
 
-        diff = np.setdiff1d(title, old_title)
+        diff = np.setdiff1d(data, old_data)
+        
+        save_data('Course Data/XII RPL A/', f'{course}.json', data_copied)
 
-        return diff if diff.size > 0 else False
+        return diff if diff.size > 0 else []
 
     def get_course_detail(self, course:str):
         self.login()
         save_data('Course Data/XII RPL A/', f'{course}.json', self.get_assignment(load_data(self.course_list), course))
         return load_data(f'Course Data/XII RPL A/{course}.json')
 
-lms = LMS('181113847', 'PRSYETI1')
-for course in ['PPKn XII (Tintin Sutrisni)', 'Produk Kreatif Kewirausahaan XII (Sopiah)', 'Bahasa Indonesia XII (Dra. Hj. Sri Gantini, M.Pd)', 'Bahasa Inggris XII (Nurhayati Hutabarat, S.Pd)', 'Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.)', 'PABP XII (LUKMAN)']:
-    print(course)
-    lms.get_course_detail(course)
+# lms = LMS('181113847', 'PRSYETI1')
+# for course in ['PPKn XII (Tintin Sutrisni)', 'Produk Kreatif Kewirausahaan XII (Sopiah)', 'Bahasa Indonesia XII (Dra. Hj. Sri Gantini, M.Pd)', 'Bahasa Inggris XII (Nurhayati Hutabarat, S.Pd)', 'Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.)', 'PABP XII (LUKMAN)']:
+#     print(course)
+#     lms.get_course_detail(course)
