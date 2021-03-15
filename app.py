@@ -84,3 +84,4 @@ if __name__ == "__main__":
     sched.add_job(lambda:check_if_update(lms, email, ml, 'Bahasa Jepang XII (Rukti Ananditya Karunia Sari, S.Pd.)', 'Jumat'), 'cron', day_of_week='fri', hour='0-15')
     sched.add_job(lambda:check_if_update(lms, email, ml, 'PABP XII (LUKMAN)', 'Jumat'), 'cron', day_of_week='fri', hour='0-15')
     sched.start()
+    
